@@ -42,14 +42,14 @@ pipeline {
         
         stage('OWASP Dependency Check') {
             steps {
-                   dependencyCheck additionalArguments: '--scan ./   ', odcInstallation: 'DP'
+                   dependencyCheck additionalArguments: '--scan ./   ', odcInstallation: 'DP-Check'
                    dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
             }
         }
         
         stage('Maven Build') {
             steps {
-                    sh "mvn clean compile"
+                    sh "mvn clean package"
             }
         }
         
@@ -68,6 +68,17 @@ pipeline {
         stage('Docker Image scan') {
             steps {
                     sh "trivy image sk77arshad/webapp:latest "
+            }
+        }
+        
+          stage('Docker Container') {
+            steps {
+                   script {
+                       withDockerRegistry(credentialsId: 'b9f5bd82-bfa9-4e28-a440-6792e37b103e', toolName: 'docker') {
+
+                            sh "docker run -d --name webapp -p 8080:8080 sk77arshad/webapp:latest"
+                        }
+                   } 
             }
         }
         
